@@ -1,0 +1,78 @@
+<h1>Demoware</h1>
+
+<div id="tilepane">
+	<span id="tile-empty">There are no models in your application.. get cracking!</span>
+	<!-- content AJAX'd in here -->
+	<br/>
+	<a id="tile-add" href="#">Add</a>
+</div>
+
+<div id="model-editor">
+	<h2>Columns</h2>
+	<ul id="columns">	
+		<!-- content AJAX'd in here -->
+	</ul>
+	<a id="column-add" href="#">Add</a>
+	
+	<h2>Relationships</h2>
+	<ul id="relationships">	
+		<!-- content AJAX'd in here -->
+	</ul>
+	<a id="relationship-add" href="#">Add</a>
+</div>
+	
+<script type="text/javascript" charset="utf-8">	
+	
+	function displayModel (name)
+	{
+		$("<div/>", {
+			id: "tile-"+name,
+			text: name,
+			click: function(){ switchTile(this.id) }
+		}).appendTo($("#tilepane"));
+	}
+	
+	function displayColumn (name, type) 
+	{
+		$("<li/>", {
+			text: name + " (" + type + ")"
+		}).appendTo($("#columns"));
+	}
+	
+	function switchTile(tileID)
+	{
+		$(".tile-selected").removeClass("tile-selected");
+		$("#"+tileID).addClass("tile-selected");
+		
+		// remove the columns from the previous model
+		$("#columns li").remove();
+		
+		// get the columns
+		var model = $("#"+tileID).html(); // tile names are model names
+		$.getJSON('/framework/columns/'+model, function(data){
+			$.each(data, function(index,value){
+				displayColumn(value.name, value.type);
+			});			
+		});
+		
+		// TODO: get associations
+	}
+
+	function setup ()
+	{
+		// get the models
+		$.getJSON('/framework/show_models', function(data){
+			if(data.length > 0)
+			{
+				$.each(data, function(index,value){
+					displayModel(value);
+				});
+				// switch to the first one
+				switchTile($("#tilepane div").first().attr("id"));
+				$("#tile-empty").hide();
+			}
+		});
+	}
+			
+	setup();
+</script>

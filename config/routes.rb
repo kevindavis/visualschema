@@ -1,6 +1,6 @@
 Access::Application.routes.draw do
   root :to => "framework#framework"
-  match 'framework/fields/:table' => 'framework#fields'
+  match 'framework/columns/:model' => 'framework#columns'
   match ':controller(/:action(/:id(.:format)))'
   
 

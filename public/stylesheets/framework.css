@@ -1,0 +1,38 @@
+body { margin: 0; padding: 0; }
+
+#tilepane 
+{
+	width: 175px;
+	margin: 10px;
+}
+
+#tilepane div
+{
+	height: 75px; width: 75px;
+	margin: 5px;
+
+	float: left;
+
+	border: 1px grey dotted;
+}
+
+.tile-selected 
+{ 
+	background: grey; 
+	color: white;
+}
+
+#tile-add { clear: left; }
+
+#model-editor
+{
+	position: absolute;
+	left: 200px;
+	top: 60px;
+}
+
+h1
+{
+	height: 50px;
+	padding: 10px; margin: 0px;
+}

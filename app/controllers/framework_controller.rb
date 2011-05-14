@@ -1,26 +1,49 @@
 class FrameworkController < ApplicationController
 
+  # routing through this method to use form helpers..  
   def framework
   end
 
-  # returns the tables in the app
-  def tables
+  # returns the models in the app
+  def show_models
+    render :json => models
+  end
+  
+  def add_model
+  end
+  
+  def remove_model
+  end
+  
+  # returns the columns for a given model
+  def columns
+    render :json => params[:model].constantize.columns
+  end
+  
+  # removes a given column from a given model
+  def remove_column
     
   end
   
-  # returns the fields for a given table
-  def fields
+  # adds a given column, of a given type to a model
+  def add_column
+    
+  end
 
-  end
-  
-  # removes a given field from a given table
-  def remove_field
-    
-  end
-  
-  # adds a given field, of a given type to a table
-  def add_field
-    
-  end
 
+  private
+  
+  # sneaky stuff that powers the introspection..
+  # .. could have used ActiveRecord::Base.descendants if the models were autoloaded
+  def models
+    Dir['app/models/*.rb'].map {|f| File.basename(f, '.*').camelize }
+  end
+  
+  def associations(model)
+    model.reflections.each { |key, value| association_names << key if value.instance_of?(ActiveRecord::Reflection::AssociationReflection) }
+  end
+  
 end
+
+
+
