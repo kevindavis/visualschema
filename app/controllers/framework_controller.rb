@@ -12,34 +12,11 @@ class FrameworkController < ApplicationController
   def create_model
     # TODO: be more clever about this - maybe use git ?
     model = params[:model].singularize
-    model_plural = model.pluralize
     
-    # generate a model file
-    model_file =
-    "class Customer < ActiveRecord::Base
-    end"
-    File.open("app/models/#{model}.rb","w") {|f| f.write(model_file)}
-    
-    # generate a migration file and run it
-    migration = 
-    "class Create#{model_plural.camelize} < ActiveRecord::Migration
-      def self.up
-        create_table :#{model_plural} do |t|
-          t.text :name
-          t.timestamps
-        end
-      end
-      
-      def self.down
-        drop_table :#{model_plural}
-      end
-    end"
-    File.open("db/migrate/#{next_migration_prefix}_create_#{model_plural}.rb", "w") {|f| f.write(migration)}
+    # generate a model and migrate the database
+    `rails generate model #{model} name:text`
     `rake db:migrate`
     
-    # initial stab at doing this.. unfortunately you can't create a migration twice
-    # `rails generate model #{model} name:text`
-    # `rake db:migrate`
     redirect_to '/'
   end
   
@@ -58,10 +35,14 @@ class FrameworkController < ApplicationController
     `rake db:migrate`
     
     # remove the generated files
-    # TODO: be more clever about this - remove only if they haven't been touched?
+    # TODO: be more clever about this - remove only if they haven't been touched? use git and rollback?
     `rm app/models/#{model}.rb`
     `rm test/unit/#{model}_test.rb`
     `rm test/fixtures/#{model_plural}.yml`
+    
+    # remove both the create and drop migrations (avoiding a problem if we try to re-add a model)
+    `rm db/migrate/*create_#{model_plural}.rb`
+    `rm db/migrate/*drop_#{model_plural}.rb`    
     
     redirect_to '/'
   end
