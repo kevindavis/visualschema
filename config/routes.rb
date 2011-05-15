@@ -1,6 +1,10 @@
 Access::Application.routes.draw do
   root :to => "framework#framework"
+  match 'framework/models' => 'framework#create_model', :via => 'post'
+  match 'framework/models' => 'framework#show_models'
+  match 'framework/models/remove' => 'framework#remove_model', :via => 'post'
   match 'framework/columns/:model' => 'framework#columns'
+  match 'framework/associations/:model' => 'framework#show_associations'
   match ':controller(/:action(/:id(.:format)))'
   
 

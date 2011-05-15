@@ -1,13 +1,21 @@
 <h1>Demoware</h1>
 
-<div id="tilepane">
-	<span id="tile-empty">There are no models in your application.. get cracking!</span>
-	<!-- content AJAX'd in here -->
-	<br/>
-	<a id="tile-add" href="#">Add</a>
+<div id="tilepane-container">
+	<div id="tilepane">
+		<span id="tile-empty">There are no models in your application.. get cracking!</span>
+		<!-- content AJAX'd in here -->
+	</div>
+	<a id="tile-new-link" href="#">Add</a>
+	<div id="tile-new">
+		<form id="new-model-form" action="/framework/models" method="post" date-remote="true" accept-charset="utf-8">
+			<label for="model">Name</label>
+			<input type="text" name="model" />
+			<input type="submit" value="Create &rarr;">
+		</form>
+	</div>
 </div>
 
-<div id="model-editor">
+<div id="model-editor" style="display:none;">
 	<h2>Columns</h2>
 	<ul id="columns">	
 		<!-- content AJAX'd in here -->
@@ -15,18 +23,22 @@
 	<a id="column-add" href="#">Add</a>
 	
 	<h2>Relationships</h2>
-	<ul id="relationships">	
+	<ul id="associations">	
 		<!-- content AJAX'd in here -->
 	</ul>
-	<a id="relationship-add" href="#">Add</a>
+	<a id="association-add" href="#">Add</a>
+	
+	<br/>
+	<a id="model-remove" href="#">Destroy</a>
 </div>
 	
 <script type="text/javascript" charset="utf-8">	
 	
-	function displayModel (name)
+	function displayTile (name)
 	{
 		$("<div/>", {
 			id: "tile-"+name,
+			class: "tile",
 			text: name,
 			click: function(){ switchTile(this.id) }
 		}).appendTo($("#tilepane"));
@@ -39,37 +51,85 @@
 		}).appendTo($("#columns"));
 	}
 	
-	function switchTile(tileID)
+	function displayAssociation (name, type)
 	{
-		$(".tile-selected").removeClass("tile-selected");
-		$("#"+tileID).addClass("tile-selected");
-		
-		// remove the columns from the previous model
+		$("<li/>", {
+			text: name + " (" + type + ")"
+		}).appendTo($("#associations"));		
+	}
+	
+	function displayModel (model)
+	{
+		// remove the columns & associations from the previous model
 		$("#columns li").remove();
+		$("#associations li").remove();
 		
 		// get the columns
-		var model = $("#"+tileID).html(); // tile names are model names
 		$.getJSON('/framework/columns/'+model, function(data){
 			$.each(data, function(index,value){
 				displayColumn(value.name, value.type);
 			});			
 		});
 		
-		// TODO: get associations
+		// get the associations
+		$.getJSON('/framework/associations/'+model, function(data){
+			$.each(data, function(index,value){
+				displayAssociation(value.name, value.type);
+			});			
+		});		
+	}
+	
+	function switchTile(tileID)
+	{		
+		if($("#tilepane .tile").length == 0)
+		{
+			$("#tile-empty").show();
+			$("#model-editor").hide();
+		}
+		else
+		{
+			$(".tile-selected").removeClass("tile-selected");
+			$("#"+tileID).addClass("tile-selected");
+
+			var model = $("#"+tileID).html(); // tile names are model names
+			displayModel(model);			
+		}
 	}
 
-	function setup ()
+	function setup()
 	{
 		// get the models
-		$.getJSON('/framework/show_models', function(data){
+		$.getJSON('/framework/models', function(data){
 			if(data.length > 0)
 			{
 				$.each(data, function(index,value){
-					displayModel(value);
+					displayTile(value);
 				});
 				// switch to the first one
-				switchTile($("#tilepane div").first().attr("id"));
+				switchTile($("#tilepane .tile").first().attr("id"));
 				$("#tile-empty").hide();
+				$("#model-editor").show();
+			} 
+		});
+		
+		// new model experience
+		$("#tile-new").hide();
+		$("#tile-new-link").click(function(){ 
+			$("#tile-new").show();
+			$("#tile-empty").hide();
+			$("#tile-new-link").hide();
+		});
+		
+		// remove model button
+		$("#model-remove").click(function(){
+			if(confirm("Are you sure? This will remove the model and any data."))
+			{
+				var to_remove = $(".tile-selected");
+				$.post('/framework/models/remove', { model: to_remove.html()}, 
+					function(){
+						to_remove.remove();
+						switchTile();
+					});
 			}
 		});
 	}

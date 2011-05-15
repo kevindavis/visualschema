@@ -1,12 +1,12 @@
 body { margin: 0; padding: 0; }
 
-#tilepane 
+#tilepane-container
 {
 	width: 175px;
 	margin: 10px;
 }
 
-#tilepane div
+#tilepane .tile
 {
 	height: 75px; width: 75px;
 	margin: 5px;
@@ -22,13 +22,30 @@ body { margin: 0; padding: 0; }
 	color: white;
 }
 
-#tile-add { clear: left; }
+#tile-new-link 
+{ 
+	width: 175px; 
+	display: block;
+	clear: both;
+}
+
+#tile-new
+{
+	float: left;
+}
 
 #model-editor
 {
 	position: absolute;
 	left: 200px;
 	top: 60px;
+}
+
+#model-remove
+{
+	display: block;
+	margin-top: 50px;
+	color: red;
 }
 
 h1

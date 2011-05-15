@@ -9,10 +9,61 @@ class FrameworkController < ApplicationController
     render :json => models
   end
   
-  def add_model
+  def create_model
+    # TODO: be more clever about this - maybe use git ?
+    model = params[:model].singularize
+    model_plural = model.pluralize
+    
+    # generate a model file
+    model_file =
+    "class Customer < ActiveRecord::Base
+    end"
+    File.open("app/models/#{model}.rb","w") {|f| f.write(model_file)}
+    
+    # generate a migration file and run it
+    migration = 
+    "class Create#{model_plural.camelize} < ActiveRecord::Migration
+      def self.up
+        create_table :#{model_plural} do |t|
+          t.text :name
+          t.timestamps
+        end
+      end
+      
+      def self.down
+        drop_table :#{model_plural}
+      end
+    end"
+    File.open("db/migrate/#{next_migration_prefix}_create_#{model_plural}.rb", "w") {|f| f.write(migration)}
+    `rake db:migrate`
+    
+    # initial stab at doing this.. unfortunately you can't create a migration twice
+    # `rails generate model #{model} name:text`
+    # `rake db:migrate`
+    redirect_to '/'
   end
   
   def remove_model
+    model = params[:model].downcase
+    model_plural = model.pluralize
+
+    # generate a migration file and run it
+    migration = 
+    "class Drop#{model_plural.camelize} < ActiveRecord::Migration
+      def self.up
+        drop_table :#{model_plural}
+      end
+    end"
+    File.open("db/migrate/#{next_migration_prefix}_drop_#{model_plural}.rb", "w") {|f| f.write(migration)}
+    `rake db:migrate`
+    
+    # remove the generated files
+    # TODO: be more clever about this - remove only if they haven't been touched?
+    `rm app/models/#{model}.rb`
+    `rm test/unit/#{model}_test.rb`
+    `rm test/fixtures/#{model_plural}.yml`
+    
+    redirect_to '/'
   end
   
   # returns the columns for a given model
@@ -29,6 +80,10 @@ class FrameworkController < ApplicationController
   def add_column
     
   end
+  
+  def show_associations
+    render :json => associations(params[:model].constantize)
+  end
 
 
   private
@@ -43,6 +98,13 @@ class FrameworkController < ApplicationController
     model.reflections.each { |key, value| association_names << key if value.instance_of?(ActiveRecord::Reflection::AssociationReflection) }
   end
   
+  def next_migration_prefix
+    DateTime.now.to_s(:number)
+    # TODO: figure out how to make this conditional on the migration numbering config 
+    # ie. config.active_record.timestamped_migrations = false
+    # "%03d" % (Dir["db/migrate/*.rb"].sort.map { |f| File.basename(f) }.last.to_i + 1).to_s
+  end
+
 end
 
 
