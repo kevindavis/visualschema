@@ -48,12 +48,12 @@ class FrameworkController < ApplicationController
   end
   
   # returns the columns for a given model
-  def columns
-    render :json => params[:model].constantize.columns
+  def show_columns
+    render :json => columns
   end
   
-  # removes a given column from a given model
-  def remove_column
+  # adds a given column, of a given type to a model
+  def create_column
     
   end
   
