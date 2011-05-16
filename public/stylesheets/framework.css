@@ -25,12 +25,15 @@ body
 	color: white;
 }
 
-#tile-new-link 
+#tile-new-link, #model-waiting
 { 
 	width: 175px; 
 	display: block;
 	clear: both;
+	margin-top: 20px;
 }
+
+#model-waiting img { vertical-align: middle; }
 
 #tile-new
 {
