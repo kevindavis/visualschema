@@ -19,7 +19,13 @@
 
 <div id="model-editor" style="display:none;">
 	<h2>Columns</h2>
-	<ul id="columns">	
+	<ul id="columns">
+		<!-- for cloning to create others.. -->
+		<li id="column-template">
+			<span class="column-name"></span>
+			<span class="column-type"></span>
+			<img src="/images/delete.gif"/>
+		</li>			
 		<!-- content AJAX'd in here -->
 	</ul>
 	<a id="column-new-link" href="#">Add</a>
@@ -69,9 +75,25 @@
 	
 	function displayColumn (name, type) 
 	{
-		$("<li/>", {
-			text: name + " (" + type + ")"
-		}).appendTo($("#columns"));
+		var $li = $("#column-template").clone().removeAttr("id");
+		$(".column-name", $li).text(name);
+		$(".column-type", $li).text(" ("+type+")");
+		$($li).addClass("column");
+		$($li).hover(function(){
+			$("img", this).toggle();
+		});
+		$("img", $li).hide();
+		$("img", $li).click(function(){
+			if(confirm("Are you sure? who knows what will happen if you remove a column.."))
+			{
+				var to_remove = $(".column-name", $(this).parent()).text();
+				$(this).parent().fadeOut();
+				$.post("/framework/columns/remove", {model: $(".tile-selected").html(), column: to_remove});
+				// TODO: make this more robust than this fire-and-forget ;-)
+			}
+		});
+		
+		$li.appendTo($("#columns"));
 	}
 	
 	function displayAssociation (name, type)
@@ -84,8 +106,8 @@
 	function displayModel (model)
 	{
 		// remove the columns & associations from the previous model
-		$("#columns li").remove();
-		$("#associations li").remove();
+		$("#columns .column").remove();
+		$("#associations .association").remove();
 		
 		// get the columns
 		$.getJSON('/framework/columns/'+model, function(data){
@@ -124,7 +146,8 @@
 			var model = $("#"+tileID).html(); // tile names are model names
 			displayModel(model);
 			hideColumnForm();
-			$('#column-new-form input[name="model"]').val(model); 
+			$('#column-new-form input[name="model"]').val(model);
+			$("#model-editor").show();
 		}
 	}
 

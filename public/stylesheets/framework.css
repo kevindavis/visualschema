@@ -1,4 +1,8 @@
-body { margin: 0; padding: 0; }
+body 
+{ 
+	margin: 0; padding: 0; 
+	font-family: Helvetica, Arial, "MS Trebuchet", sans-serif;
+}
 
 #tilepane-container
 {
@@ -9,8 +13,7 @@ body { margin: 0; padding: 0; }
 #tilepane .tile
 {
 	height: 75px; width: 75px;
-	margin: 5px;
-
+	margin: 0px 10px 10px 0px;
 	float: left;
 
 	border: 1px grey dotted;
@@ -40,6 +43,16 @@ body { margin: 0; padding: 0; }
 	left: 200px;
 	top: 60px;
 }
+
+#columns, #associations
+{
+	list-style-type: none;
+	padding: 0;
+}
+.column, .association { line-height: 25px; }
+.column img, .association img { vertical-align: middle; }
+
+#column-template, #association-template { display: none; }
 
 #model-remove
 {

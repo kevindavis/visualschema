@@ -62,7 +62,14 @@ class FrameworkController < ApplicationController
     render :json => columns.last
   end
   
+  # removes a given column from a given model
+  def remove_column
+    `rails generate migration Remove#{params[:column]}From#{params[:model]}`
+    `rake db:migrate`
+    `rm db/migrate/*Remove#{params[:column]}From#{params[:model]}.rb`
+    `rm db/migrate/Add#{params[:column]}To#{params[:model]}.rb`
     
+    render :status => :ok, :text => "#{params[:column]} removed from #{params[:model]}"
   end
   
   def show_associations
