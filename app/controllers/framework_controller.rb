@@ -14,10 +14,10 @@ class FrameworkController < ApplicationController
     model = params[:model].singularize
     
     # generate a model and migrate the database
-    `rails generate model #{model} name:text`
+    `rails generate model #{model} name:string`
     `rake db:migrate`
     
-    redirect_to '/'
+    render :status => :ok, :text => model
   end
   
   def remove_model
@@ -54,16 +54,19 @@ class FrameworkController < ApplicationController
   
   # adds a given column, of a given type to a model
   def create_column
-    
+    model = params[:model].camelize
+    name = params[:column_name].camelize
+    `rails generate migration Add#{name}To#{model} #{name}:#{params[:column_type]}`
+    `rake db:migrate`
+      
+    render :json => columns.last
   end
   
-  # adds a given column, of a given type to a model
-  def add_column
     
   end
   
   def show_associations
-    render :json => associations(params[:model].constantize)
+    render :json => associations
   end
 
 
@@ -75,8 +78,12 @@ class FrameworkController < ApplicationController
     Dir['app/models/*.rb'].map {|f| File.basename(f, '.*').camelize }
   end
   
-  def associations(model)
-    model.reflections.each { |key, value| association_names << key if value.instance_of?(ActiveRecord::Reflection::AssociationReflection) }
+  def columns
+    params[:model].camelize.constantize.columns.delete_if {|x| x.name == "id" || x.name.match(".*_id$")}
+  end
+  
+  def associations
+    params[:model].camelize.constantize.reflections.each { |key, value| association_names << key if value.instance_of?(ActiveRecord::Reflection::AssociationReflection) }
   end
   
   def next_migration_prefix

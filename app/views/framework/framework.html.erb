@@ -7,7 +7,9 @@
 	</div>
 	<a id="tile-new-link" href="#">Add</a>
 	<div id="tile-new">
-		<form id="new-model-form" action="/framework/models" method="post" date-remote="true" accept-charset="utf-8">
+		<form id="new-model-form" 
+					action="/framework/models" method="post" data-remote="true" data-type="text" 
+					accept-charset="utf-8">
 			<label for="model">Name</label>
 			<input type="text" name="model" />
 			<input type="submit" value="Create &rarr;">
@@ -20,7 +22,28 @@
 	<ul id="columns">	
 		<!-- content AJAX'd in here -->
 	</ul>
-	<a id="column-add" href="#">Add</a>
+	<a id="column-new-link" href="#">Add</a>
+	<div id="column-new">
+		<form id="column-new-form" 
+					action="/framework/columns" method="post" data-remote="true" data-type="json"
+					accept-charset="utf-8">
+			<input type="hidden" name="model" value="stub" /> <!-- changed by JS in the switchTile function -->
+			<input type="text" name="column_name" />
+			<select name="column_type">
+				<!-- types supported by Rails: :primary_key, :string, :text, :integer, :float, :decimal, :datetime, :timestamp, :time, :date, :binary, :boolean -->
+				<option value="string">single line of text</option>
+				<option value="text">multiple lines of text</option>
+				<option value="integer">number</option>
+				<option value="decimal">currency</option>
+				<option value="datetime">date and time</option>
+				<option value="time">time</option>
+				<option value="date">date</option>
+				<option value="boolean">true/false</option>
+			</select>
+			<input type="submit" value="Create &rarr;">
+		</form>
+		<a id="column-new-cancel" href="#">cancel</a>
+	</div>
 	
 	<h2>Relationships</h2>
 	<ul id="associations">	
@@ -79,6 +102,13 @@
 		});		
 	}
 	
+	function hideColumnForm() 
+	{
+		$("#column-new").hide();
+		$("#column-new-form")[0].reset();
+		$("#column-new-link").show();		
+	}
+	
 	function switchTile(tileID)
 	{		
 		if($("#tilepane .tile").length == 0)
@@ -92,7 +122,9 @@
 			$("#"+tileID).addClass("tile-selected");
 
 			var model = $("#"+tileID).html(); // tile names are model names
-			displayModel(model);			
+			displayModel(model);
+			hideColumnForm();
+			$('#column-new-form input[name="model"]').val(model); 
 		}
 	}
 
@@ -120,6 +152,17 @@
 			$("#tile-new-link").hide();
 		});
 		
+		$("#new-model-form")
+			.bind("ajax:success", function(evt, data, status, xhr){
+				displayTile(xhr.responseText);
+				switchTile("tile-"+xhr.responseText);
+				$("#tile-new").hide();
+				$("#tile-new-link").show();
+			})
+			.bind("ajax:error", function(evt, data, status, xhr){
+				// TODO: when model create fails
+			});
+		
 		// remove model button
 		$("#model-remove").click(function(){
 			if(confirm("Are you sure? This will remove the model and any data."))
@@ -132,6 +175,25 @@
 					});
 			}
 		});
+		
+		// new column experience
+		$("#column-new").hide();
+		$("#column-new-link").click(function(){
+			$("#column-new").show();
+			$("#column-new-link").hide();
+			$('#column-new-form input[name="column_name"]').focus();
+		});
+		$("#column-new-cancel").click(function(){ hideColumnForm() });
+		
+		$("#column-new-form")
+			.bind("ajax:success", function(evt, data, status, xhr){
+				displayColumn(data.name,data.type);
+				$("#column-new-form")[0].reset();
+			})
+			.bind("ajax:error", function(evt, data, status, xhr){
+				// TODO: when column create fails
+			});
+		
 	}
 			
 	setup();

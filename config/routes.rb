@@ -1,13 +1,16 @@
 Access::Application.routes.draw do
   root :to => "framework#framework"
+
   match 'framework/models' => 'framework#create_model', :via => 'post'
-  match 'framework/models' => 'framework#show_models'
   match 'framework/models/remove' => 'framework#remove_model', :via => 'post'
+  match 'framework/models' => 'framework#show_models'
+
   match 'framework/columns/:model' => 'framework#show_columns'
+  match 'framework/columns/' => 'framework#create_column', :via => 'post'
   match 'framework/associations/:model' => 'framework#show_associations'
+
   match ':controller(/:action(/:id(.:format)))'
   
-
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
