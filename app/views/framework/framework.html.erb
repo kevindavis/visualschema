@@ -2,7 +2,7 @@
 
 <div id="tilepane-container">
 	<div id="tilepane">
-		<span id="tile-empty">There is nothing in your application.. get cracking!</span>
+		<p id="tile-empty">There is nothing in your application.. get cracking!</p>
 		<!-- content AJAX'd in here -->
 	</div>
 	<a id="tile-new-link" href="#">Add</a>
@@ -20,6 +20,7 @@
 
 <div id="model-editor">
 	<h2>Columns</h2>
+	<p id="columns-empty">There are no columns in this model.. that's pretty silly.</p>
 	<ul id="columns">
 		<!-- for cloning to create others.. -->
 		<li id="column-template">
@@ -52,11 +53,35 @@
 		<a id="column-new-cancel" href="#">cancel</a>
 	</div>
 	
-	<h2>Relationships</h2>
+	<h2>Associations</h2>
+	<p id="associations-empty">This model doesn't have any friends.. so sad!</p>
 	<ul id="associations">	
+		<!-- for cloning to create others.. -->
+		<li id="association-template">
+			<span class="association-type"></span>
+			<span class="association-target"></span>
+			<img src="/images/delete.gif"/>
+		</li>
 		<!-- content AJAX'd in here -->
 	</ul>
-	<a id="association-add" href="#">Add</a>
+	<a id="association-new-link" href="#">Add</a>
+	<div id="association-new">
+		<form id="association-new-form" 
+					action="/framework/associations" method="post" data-remote="true" data-type="text"
+					accept-charset="utf-8">
+			<input type="hidden" name="model" value="stub" /> <!-- changed by JS in the switchTile function -->
+			<select name="association_type">
+				<option value="many">has many</option>
+				<option value="one">has one</option>
+				<option value="belongs">belongs to</option>
+			</select>
+			<select	name="association_target">
+				<!-- changed by JS in the switchTile function -->
+			</select>
+			<input type="submit" value="Create &rarr;">
+		</form>
+		<a id="association-new-cancel" href="#">cancel</a>
+	</div>
 	
 	<br/>
 	<a id="model-remove" href="#">Destroy</a>

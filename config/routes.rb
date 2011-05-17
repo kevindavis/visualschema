@@ -8,6 +8,9 @@ Access::Application.routes.draw do
   match 'framework/columns/remove' => 'framework#remove_column', :via => 'post'
   match 'framework/columns/' => 'framework#create_column', :via => 'post'
   match 'framework/columns/:model' => 'framework#show_columns'
+  
+  match 'framework/associations/remove' => 'framework#remove_association', :via => 'post'
+  match 'framework/associations' => 'framework#create_association', :via => 'post'
   match 'framework/associations/:model' => 'framework#show_associations'
 
   match ':controller(/:action(/:id(.:format)))'
