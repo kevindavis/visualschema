@@ -47,12 +47,10 @@ class FrameworkController < ApplicationController
     redirect_to '/'
   end
   
-  # returns the columns for a given model
   def show_columns
     render :json => columns
   end
   
-  # adds a given column, of a given type to a model
   def create_column
     model = params[:model].camelize
     name = params[:column_name].camelize
@@ -62,12 +60,11 @@ class FrameworkController < ApplicationController
     render :json => columns.last
   end
   
-  # removes a given column from a given model
   def remove_column
-    `rails generate migration Remove#{params[:column]}From#{params[:model]}`
+    `rails generate migration Remove#{params[:column]}From#{params[:model]} #{params[:column]}:#{params[:column_type]}`
     `rake db:migrate`
-    `rm db/migrate/*Remove#{params[:column]}From#{params[:model]}.rb`
-    `rm db/migrate/Add#{params[:column]}To#{params[:model]}.rb`
+    `rm db/migrate/*remove_#{params[:column].camelize}_from_#{params[:model]}.rb`
+    `rm db/migrate/*add_#{params[:column]}_to_#{params[:model]}.rb`
     
     render :status => :ok, :text => "#{params[:column]} removed from #{params[:model]}"
   end
@@ -82,15 +79,15 @@ class FrameworkController < ApplicationController
   # sneaky stuff that powers the introspection..
   # .. could have used ActiveRecord::Base.descendants if the models were autoloaded
   def models
-    Dir['app/models/*.rb'].map {|f| File.basename(f, '.*').camelize }
+    Dir['app/models/*.rb'].map {|f| File.basename(f, '.*').camelize.pluralize }
   end
   
   def columns
-    params[:model].camelize.constantize.columns.delete_if {|x| x.name == "id" || x.name.match(".*_id$")}
+    params[:model].singularize.camelize.constantize.columns.delete_if {|x| x.name == "id" || x.name.match(".*_id$")}
   end
   
   def associations
-    params[:model].camelize.constantize.reflections.each { |key, value| association_names << key if value.instance_of?(ActiveRecord::Reflection::AssociationReflection) }
+    params[:model].singularize.camelize.constantize.reflections.each { |key, value| association_names << key if value.instance_of?(ActiveRecord::Reflection::AssociationReflection) }
   end
   
   def next_migration_prefix
