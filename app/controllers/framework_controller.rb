@@ -76,32 +76,27 @@ class FrameworkController < ApplicationController
   def create_association
     model = params[:model].camelize.singularize
     target = params[:association_target].camelize.singularize
+    type = params[:association_type]
     
-    # add the appropriate column to the database, create a line
-    
-    case params[:association_type]
-    when 'many'
-      `rails generate migration Add#{model.pluralize}To#{target.pluralize} #{model}_id:integer`
-    when 'one'
-      `rails generate migration Add#{model.singularize}To#{target.pluralize} #{model}_id:integer`
-    when 'belongs'
-      `rails generate migration Add#{target.singularize}To#{model.pluralize} #{target.singularize}_id:integer`
+    # add the appropriate columns to the database, add lines to the models
+    add_association_to_model(type, model, target)
+    case type
+    when 'has_many'
+      `rails generate migration Add#{model.pluralize}To#{target.pluralize} #{model.downcase}_id:integer`
+      add_association_to_model("belongs_to", target, model)
+    when 'has_one'
+      `rails generate migration Add#{model.singularize}To#{target.pluralize} #{model.downcase}_id:integer`
+      add_association_to_model("belongs_to", target, model)
+    # going to approach all adding from the source 
+    # when 'belongs_to'
+    #   `rails generate migration Add#{target.singularize}To#{model.pluralize} #{target.downcase.singularize}_id:integer`
+    #   add_association_to_model("has_one", target) // don't know it's just one.. could be many
     end
     
     # migrate the database
     `rake db:migrate`
     
     # adjust the model file to include the association
-    class_line = 0
-    lines = File.read("app/models/#{model}.rb").split("\n")
-    lines.each_with_index do |line, i|
-      if line.match(/^class #{model.camelize}/) then
-        class_line = i
-        break
-      end
-    end
-    lines.insert(class_line+1, association_line(params[:association_type], target))
-    File.open("app/models/#{model}.rb", 'w') {|f| f.write(lines.join("\n")) }
           
     render :status => :ok, :text => "association created successfully"
   end
@@ -109,29 +104,27 @@ class FrameworkController < ApplicationController
   def remove_association
     model = params[:model].singularize
     target = params[:association_target].camelize.singularize
+    type = params[:association_type]
     
-    # add the appropriate column to the database, create a line 
-    association_line = ""
-    case params[:association_type]
-    when 'many'
+    # remove the appropriate column from the database, remove the lines from the model
+    remove_association_from_model(type, model, target)
+    post_migration_commands = []
+    case type
+    when 'has_many'
       `rails generate migration Remove#{model.pluralize}From#{target.pluralize} #{model}_id:integer`
-    when 'one'
+      remove_association_from_model("belongs_to", target, model)
+      post_migration_commands << "rm db/migrate/*add_#{model.pluralize}_to_#{target.pluralize}.rb"
+    when 'has_one'
       `rails generate migration Remove#{model.singularize}From#{target.pluralize} #{target.singularize}`
-    when 'belongs'
-      `rails generate migration Remove#{target.singularize}From#{model.pluralize} #{target}`
+      remove_association_from_model("belongs_to", target, model)
+      post_migration_commands << "rm db/migrate/*add_#{model.singularize}_to_#{target.pluralize}.rb"
+    # going to drive all the modifications of the associations from the source
+    # when 'belongs_to'
+    #   `rails generate migration Remove#{target.singularize}From#{model.pluralize} #{target}`
     end
-    
-    # migrate the database
+        
     `rake db:migrate`
-    
-    # TODO: remove both add and remove migrations
-    
-    # remove the lines from the model files
-    lines = File.read("app/models/#{model}.rb").split("\n")
-    lines.delete_if do |line|
-      line.contains(association_line(params[:association_type], params[:association_target])) 
-    end
-    File.open("app/models/#{model}.rb", 'w') {|f| f.write(lines.join("\n")) }
+    post_migration_commands.each { |command| `#{command}` }
     
     render :status => :ok, :text => "association removed"
   end
@@ -168,13 +161,36 @@ class FrameworkController < ApplicationController
   
   def association_line(type, target)
     case type
-    when 'many'
-      association_line = "\thas_many :#{target.pluralize}"
-    when 'one'
-      association_line = "\thas_one :#{target.singularize}"
-    when 'belongs'
-      association_line = "\tbelongs_to :#{target.singularize}"
+    when 'has_many'
+      association_line = "\thas_many :#{target.downcase.pluralize}"
+    when 'has_one'
+      association_line = "\thas_one :#{target.downcase.singularize}"
+    when 'belongs_to'
+      association_line = "\tbelongs_to :#{target.downcase.singularize}"
     end
+  end
+  
+  def add_association_to_model(type, model, target)
+    class_line = 0
+    lines = File.read("app/models/#{model}.rb").split("\n")
+    lines.each_with_index do |line, i|
+      if line.match(/^class #{model.camelize}/) then
+        class_line = i
+        break
+      end
+    end
+    lines.insert(class_line+1, association_line(type, target))
+    File.open("app/models/#{model}.rb", 'w') {|f| f.write(lines.join("\n")) }
+  end
+  
+  def remove_association_from_model(type, model, target)
+    lines = File.read("app/models/#{model}.rb").split("\n")
+    debugger
+    lines.delete_if do |line|
+      debugger
+      line.include? association_line(type, target)
+    end
+    File.open("app/models/#{model}.rb", 'w') {|f| f.write(lines.join("\n")) }
   end
   
 end

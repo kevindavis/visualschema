@@ -25,13 +25,19 @@ function displayColumn (name, type)
 			var column_type = $(".column-type", $(this).parent()).text();
 
 			$(this).parent().fadeOut();
+			$(this).parent().remove();
 			// TODO: make this more robust than this fire-and-forget ;-)
 			$.post("/framework/columns/remove", {	
 					model: $(".tile-selected").html(), 
 					column: column_name, 
 					column_type: column_type
+			})
+			.success(function(){
+				if($("#columns .column").length == 0) $("#columns-empty").show(); 
+			})
+			.error(function(){
+				alert("there was a problem creating the column.. WHAT DID YOU DO?!");
 			});
-			if($("#columns .column").length == 0) $("#columns-empty").show();
 		}
 	});
 	
@@ -41,7 +47,7 @@ function displayColumn (name, type)
 function displayAssociation (type, target)
 {
 	var $li = $("#association-template").clone().removeAttr("id");
-	$(".association-type", $li).text(type);
+	$(".association-type", $li).text(type.replace(/_/, " "));
 	$(".association-target", $li).text(target);
 	$li.addClass("association");
 		$li.hover(function(){
@@ -51,17 +57,23 @@ function displayAssociation (type, target)
 	$("img", $li).click(function(){
 		if(confirm("Are you sure? who knows what will happen if you remove an association.."))
 		{
-			var assoc_type = $(".association-type", $(this).parent()).text();
+			var assoc_type = $(".association-type", $(this).parent()).text().replace(/ /, "_");
 			var assoc_target = $(".association-target", $(this).parent()).text();
 
 			$(this).parent().fadeOut();
+			$(this).parent().remove();
 			// TODO: make this more robust than this fire-and-forget ;-)
 			$.post("/framework/associations/remove", {	
 					model: $(".tile-selected").html(), 
 					association_target: assoc_target, 
 					association_type: assoc_type
+			})
+			.success(function(){ 
+				if($("#associations .association").length == 0) $("#association-empty").show();
+			})
+			.error(function(){
+				alert("there was a problem creating the association.. WHAT DID YOU DO?!");
 			});
-			if($("#associations .association").length == 0) $("#association-empty").show();
 		}
 	});
 	
@@ -85,7 +97,7 @@ function displayModel (model)
 	// get the associations
 	$.getJSON('/framework/associations/'+model, function(data){
 		$.each(data, function(index,value){
-			displayAssociation(value.macro, value.name);
+			displayAssociation(value.type, value.target);
 		});	
 		if($("#associations .association").length == 0) $("#associations-empty").show();			
 	});
