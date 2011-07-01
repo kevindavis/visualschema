@@ -1,0 +1,24 @@
+== BACKEND == 
+
+add both sides of has_many
+save database
+
+return errors when there are some 
+- duplicate tables
+- duplicate columns
+
+add relationship
+remove relationship
+
+schema models
+- namespaced
+- populate with schemas
+- .. aliases?
+
+== FRONTEND == 
+
+shouldn't show associations that already exist as options
+
+tiles should use plurals.. should set when the xhr comes back from create
+column type mapping to human-readable types
+association type mapping to human-readable types
