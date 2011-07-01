@@ -1,4 +1,4 @@
-Access::Application.routes.draw do
+VisualSchema::Application.routes.draw do
   root :to => "framework#framework"
 
   match 'framework/models' => 'framework#create_model', :via => 'post'
